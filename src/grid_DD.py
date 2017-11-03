@@ -9,6 +9,7 @@ Python script to create a grid basedon bounding box extents in decimanl degrees.
 import sys
 import argparse
 import math
+import re
 # import urllib.request
 # import shapefile as shp
 # from pyproj import Proj, transform
@@ -68,9 +69,9 @@ for p in parameters:
 # Module Methods.
 ########################
 
-
+"""
 # Convert DMS to DD.
-def dd2dms(longitude, latitude):
+def dd2dms_old(longitude, latitude):
     # math.modf() splits whole number and decimal into tuple
     # eg 53.3478 becomes (0.3478, 53)
     split_degx = math.modf(longitude)
@@ -108,17 +109,62 @@ def dd2dms(longitude, latitude):
     # abs() remove negative from degrees, was only needed for if-else above
     print("\t" + str(abs(degrees_x)) + u"\u00b0 " + str(minutes_x) + "' " + str(seconds_x) + "\" " + EorW)
     print("\t" + str(abs(degrees_y)) + u"\u00b0 " + str(minutes_y) + "' " + str(seconds_y) + "\" " + NorS)
+"""
+
+# NOTE: these calculations are precise down to 1.1132 meter at the equator (5 decimal places in the DD value).
 
 
-# Convert DD to DMS.    # Not Working. Not really necessary.
-"""
-def latDD(x):   # x = latitude or longitude.
-    D = int(x[1:3])
-    M = int(x[3:5])
-    S = float(x[5:])
-    DD = D + float(M)/60 + float(S)/3600
-    return DD
-"""
+def dms2dd(degrees, minutes, seconds, direction):
+    dd = float(degrees) + (float(minutes) / 60) + (float(seconds) / (60 * 60))
+    if direction == 'S' or direction == 'W':
+        dd *= -1
+    # print('dms2dd: ', dd)
+    return dd
+
+
+def dd2dms(deg):
+    d = int(deg)
+    md = abs(deg - d) * 60
+    m = int(md)
+    sd = (md - m) * 60
+    # print('dd2dms: ', d, m, sd)
+    return [d, m, sd]
+
+
+def parse_dms(dms):
+    parts = re.split("""[°'",]+""", dms)
+    # print(parts)
+    lat = dms2dd(parts[0], parts[1], parts[2], parts[3])
+    lng = dms2dd(parts[4], parts[5], parts[6], parts[7])
+    # print('parse_dms: ', lat, lng)
+    return (lat, lng)
+
+
+# INPUTS TEST.
+#
+# Coordinate A DD:      32.550058,-97.546649
+# Coordinate A DMS:     32°33'00.2"N 97°32'47.9"W
+# Coordinate B DD:      32.987978,-97.034774
+# Coordinate B DMS:     32°59'16.7"N 97°02'05.2"W
+
+print("------------------------------")
+print("""Inputs: 32°33'00.2"N 97°32'47.9"W | 32.550058,-97.546649""")
+dd = parse_dms("""32°33'00.2"N, 97°32'47.9"W""")         # CORRECT SOLUTION! Comma between coords, added comma to split list in method.
+print(dd)
+# print(dd2dms(dd[0]))
+print(dd2dms(32.550058))
+print(dd2dms(-97.546649))
+print("\n")
+
+print("------------------------------")
+print("""Inputs: 32°59'16.7"N 97°02'05.2"W | 32.987978,-97.034774""")
+dd = parse_dms("""32°59'16.7"N, 97°02'05.2"W""")         # CORRECT SOLUTION! Comma between coords, added comma to split list in method.
+print(dd)
+# print(dd2dms(dd[0]))
+print(dd2dms(32.987978))
+print(dd2dms(-97.034774))
+print("\n")
+
 
 ########################
 # Module Method Testing.
@@ -140,8 +186,12 @@ for city,x,y in coords:
 # Ft.Worth:     97° 32' 47.94" W,   32° 33' 0.21" N
 # Dallas:       97° 2' 5.19" W,     32° 59' 16.72" N
 
+# latDD(!Latitude!)
+# test_latDD = latDD('6° 15' 34.92"')
+# print(test_latDD)
+
 ########################
 # Module Logic.
 ########################
 
-print('Starting ', scriptName)
+# print('Starting ', scriptName)

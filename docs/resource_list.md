@@ -44,6 +44,7 @@
 - http://geospatialpython.com/
 - http://geospatialpython.com/2011/09/map-projections.html
 - http://geospatialpython.com/2010/11/introducing-python-shapefile-library.html
+- http://en.proft.me/2015/09/20/converting-latitude-and-longitude-decimal-values-p/
 
 
 ### GDAL
