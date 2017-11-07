@@ -39,6 +39,19 @@
 - https://github.com/GeospatialPython/pyshp/wiki/Map-Projections
 
 
+### Proj
+
+- https://glenbambrick.com/2015/08/09/prj/
+- https://glenbambrick.com/2016/01/24/reproject-shapefile/
+- http://geospatialpython.com/
+
+
+### Pygeoj
+
+- https://github.com/karimbahgat/PyGeoj
+- https://thepythongischallenge.wordpress.com/2014/07/25/pygeoj-a-simple-python-geojson-file-reader-and-writer/
+
+
 ### Refs
 
 - http://geospatialpython.com/

@@ -2,6 +2,7 @@
 Python script to create a grid basedon bounding box extents in decimanl degrees.
 """
 
+
 ########################
 # Module Imports.
 ########################
@@ -10,9 +11,10 @@ import sys
 import argparse
 import math
 import re
-# import urllib.request
 import shapefile as shp
-# from pyproj import Proj, transform
+import pygeoj
+from pyproj import Proj, transform
+# import urllib.request
 
 
 ########################
@@ -43,6 +45,7 @@ if len(sys.argv) != 9:    # 9 to include sys.argv[0].
     print("Exiting script.")
     sys.exit(1)
 
+
 ########################
 # Module variables.
 ########################
@@ -59,63 +62,20 @@ fileBaseName = sys.argv[8]
 
 parameters = [scriptName, coordType, minLat, minLong, maxLat, maxLong, cellWidth, cellHeight, fileBaseName]
 
-# """
+"""
 # Log out parameter values for testing.
-
-# print(len(parameters))
-
+print(len(parameters))
 for idx, val in enumerate(parameters):
     print('---------------')
     print('Argument: ', idx, val)
     print('Argument Type: ', type(val))
     print('\n')
-# """
+"""
+
 
 ########################
 # Module Methods.
 ########################
-
-"""
-# Convert DMS to DD.
-def dd2dms_old(longitude, latitude):
-    # math.modf() splits whole number and decimal into tuple
-    # eg 53.3478 becomes (0.3478, 53)
-    split_degx = math.modf(longitude)
-
-    # the whole number [index 1] is the degrees
-    degrees_x = int(split_degx[1])
-
-    # multiply the decimal part by 60: 0.3478 * 60 = 20.868
-    # split the whole number part of the total as the minutes: 20
-    # abs() absoulte value - no negative
-    minutes_x = abs(int(math.modf(split_degx[0] * 60)[1]))
-
-    # multiply the decimal part of the split above by 60 to get the seconds
-    # 0.868 x 60 = 52.08, round excess decimal places to 2 places
-    # abs() absoulte value - no negative
-    seconds_x = abs(round(math.modf(split_degx[0] * 60)[0] * 60, 2))
-
-    # repeat for latitude
-    split_degy = math.modf(latitude)
-    degrees_y = int(split_degy[1])
-    minutes_y = abs(int(math.modf(split_degy[0] * 60)[1]))
-    seconds_y = abs(round(math.modf(split_degy[0] * 60)[0] * 60, 2))
-
-    # account for E/W & N/S
-    if degrees_x < 0:
-        EorW = "W"
-    else:
-        EorW = "E"
-
-    if degrees_y < 0:
-        NorS = "S"
-    else:
-        NorS = "N"
-
-    # abs() remove negative from degrees, was only needed for if-else above
-    print("\t" + str(abs(degrees_x)) + u"\u00b0 " + str(minutes_x) + "' " + str(seconds_x) + "\" " + EorW)
-    print("\t" + str(abs(degrees_y)) + u"\u00b0 " + str(minutes_y) + "' " + str(seconds_y) + "\" " + NorS)
-"""
 
 # NOTE: these calculations are precise down to 1.1132 meter at the equator (5 decimal places in the DD value).
 
@@ -146,61 +106,24 @@ def parse_dms(dms):
     return (lat, lng)
 
 
-########################
-# Module Method Testing.
-########################
+# function to generate .prj file information using spatialreference.org
+def getWKT_PRJ (epsg_code):
+     import urllib
+     # access projection information
+     wkt = urllib.urlopen("http://spatialreference.org/ref/epsg/{0}/prettywkt/".format(epsg_code))
+     # remove spaces between charachters
+     remove_spaces = wkt.read().replace(" ","")
+     # place all the text on one line
+     output = remove_spaces.replace("\n", "")
+     return output
 
-"""
-# Test dd2dms()
-
-coords = [["Dublin", -6.2597, 53.3478],["Paris", 2.3508, 48.8567],["Sydney", 151.2094, -33.8650],["Ft.Worth", -97.546649, 32.550058],["Dallas", -97.034774, 32.987978]]
-
-for city,x,y in coords:
-    print(city + ":")
-    dd2dms(x, y)
-
-# Expected Results:
-# Dublin:       6° 15' 34.92" W, 	53° 20' 52.08" N
-# Paris: 	    2° 21' 2.88" E, 	48° 51' 24.12" N
-# Sydney:       151° 12' 33.84" E,  33° 51' 54.0" S
-# Ft.Worth:     97° 32' 47.94" W,   32° 33' 0.21" N
-# Dallas:       97° 2' 5.19" W,     32° 59' 16.72" N
-
-# latDD(!Latitude!)
-test_latDD = latDD('6° 15' 34.92"')
-print(test_latDD)
-"""
-
-# INPUTS TESTS.
-# Coordinate A DD:      32.550058,-97.546649
-# Coordinate A DMS:     32°33'00.2"N 97°32'47.9"W
-# Coordinate B DD:      32.987978,-97.034774
-# Coordinate B DMS:     32°59'16.7"N 97°02'05.2"W
-
-# print("------------------------------")
-# print("""Inputs: 32°33'00.2"N 97°32'47.9"W | 32.550058,-97.546649""")
-# # CORRECT SOLUTION! Comma between coords, added comma to split list in method.
-# dd = parse_dms("""32°33'00.2"N, 97°32'47.9"W""")
-# print(dd)
-# print(dd2dms(32.550058))
-# print(dd2dms(-97.546649))
-# print("\n")
-#
-# print("------------------------------")
-# print("""Inputs: 32°59'16.7"N 97°02'05.2"W | 32.987978,-97.034774""")
-# # CORRECT SOLUTION! Comma between coords, added comma to split list in method.
-# dd = parse_dms("""32°59'16.7"N, 97°02'05.2"W""")
-# print(dd)
-# print(dd2dms(32.987978))
-# print(dd2dms(-97.034774))
-# print("\n")
 
 ########################
 # Module Logic.
 ########################
 
 """
-Reading a Shapefile.
+Reading Input Shapefile.
 """
 
 # 1) Create Shapefile Reader using input shapefile.
@@ -211,9 +134,37 @@ Reading a Shapefile.
 
 
 """
-Writing a Shapefile.
+Generating Fishnet Grid.
 """
 
+if(coordType == 'dd'):
+    print('input coordinate type: decimal degrees')
+    print('using decimal degrees inputs')
+
+
+if(coordType == 'dms'):
+    print('input coordinate type: degrees minutes seconds')
+    print('using degrees minutes seconds inputs')
+
+
+"""
+Generate a projection file.
+
+# Example Projection File:
+ GEOGCS["WGS84",DATUM["WGS_1984",SPHEROID["WGS84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.01745329251994328,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]]
+"""
+
+# create the .prj file
+prj = open("filename.prj", "w")
+# call the function and supply the epsg code
+epsg = getWKT_PRJ("4326")
+prj.write(epsg)
+prj.close()
+
+
+"""
+Writing Output Shapefile.
+"""
 # Create a shapefile writer.
 w = shp.Writer()
 
@@ -221,6 +172,12 @@ w = shp.Writer()
 To help prevent accidental misalignment pyshp has an "auto balance" feature to make sure when you add either a shape or a record the two sides of the equation line up. This way if you forget to update an entry the shapefile will still be valid and handled correctly by most shapefile software. Autobalancing is NOT turned on by default. To activate it set the attribute autoBalance to 1 or True
 """
 
+# Manually balancing records and fields.
+# w.autoBalance = 0
+# ... (add records and geometry)
+# w.balance()
+
+# Autobalancing records and fields.
 w.autoBalance = 1
 
 """
@@ -231,29 +188,46 @@ Geometry is added using one of several convenience methods. The "null" method is
 # w.shapeType = 5
 w = shp.Writer(shapeType=shp.POINT)
 
-# Create fields for attribute values.
-w.field('field0', 'C')
-w.field('field1', 'C')
-w.field('field2', 'C')
+# Define point coordinates.
+w.point(125, 50)
+
+# Create fields for attribute values ['field_name', 'field_type']
+# C :: Text or Character
+# D :: Date
+# N :: Numeric
+# F :: Numeric
+# L :: Boolean
+
+shp_fields = [['name', 'C'], ['_id', 'C'], ['value', 'C']]
+num_fields = len(shp_fields)
+# print(num_fields)
+
+for i in range(num_fields):
+    print(shp_fields[i])
+    print(shp_fields[i][0])
+    print(shp_fields[i][1])
+    w.field(shp_fields[i][0], shp_fields[i][1])
 
 # Populate the fields with record values.
-w.record('name', 'one', 'two')
+w.record('test_point_10', '010', '50')
+w.record('test_point_11', '011', '51')
+
+shp_records = [['test_point_10', '010', '10'], ['test_point_11', '011', '11'],]
+num_records = len(shp_records)
+print(num_records)
+
+# for i in range(num_records):
+#     print(shp_records[i])
+#     print(shp_records[i][0])
+#     print(shp_records[i][1])
+#     print(shp_records[i][2])
+    # w.field(shp_fields[i][0], shp_fields[i][1])
 
 # Define point coordinates.
-w.point(122, 45)
+# w.point(122, 45)
 
 # Write the shapefile.
-w.save('shapefiles/test/point_08')
-
-
-
-# if(coordType == 'dd'):
-#     print('coordinate type: decimal degrees')
-
-
-
-# if(coordType == 'dms'):
-#     print('coordinate type: degrees minutes seconds')
+w.save('shapefiles/test/point_10')
 
 
 
