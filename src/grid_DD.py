@@ -21,13 +21,14 @@ from pyproj import Proj, transform
 # Input Parameters
 ########################
 
-helpDescription = "This script requires 7 arguments: minLong, minLat, maxLong, maxLat, cellWidth, cellHeight, output file basename. \n"
+helpDescription = "This script requires 8 arguments: coordinateInputs, minLong, minLat, maxLong, maxLat, cellWidth, cellHeight, output file basename. \n"
+helpDescription += "The coordinateInputs should be a string indicating whether dd or dms values are used for generating an empty grid. \n"
 helpDescription += "The minX, minY, maxX and maxY should be in DD (decimal degrees). \n"
 helpDescription += "The cellWidth and cellHeight should be in meters. \n"
 helpDescription += "The output file name should be a single string (underscores are okay). \n"
 
 parser = argparse.ArgumentParser(description=helpDescription, usage='use "%(prog)s --help" for more information', formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument("coordType", help="A string that specifices the type of coordinates used to define the bounding box, use 'dd' if in decimal degrees, use 'dms' if in degrees minutes seconds.")
+parser.add_argument("coordType", help="A string that specifices the type of coordinates used to define the bounding box: \n - use 'dd' if in decimal degrees. \n - use 'dms' if in degrees minutes seconds.")
 parser.add_argument("minLong", help="The minimum Longitude (N/S or X) for the coordinate bounding box in DD (decimal degrees).", type=int)
 parser.add_argument("minLat", help="The minimum Latitude (E/W or Y) for the coordinate bounding box in DD (decimal degrees).", type=int)
 parser.add_argument("maxLong", help="The maximum Longitude (N/S or X) for the coordinate bounding box in DD (decimal degrees).", type=int)
