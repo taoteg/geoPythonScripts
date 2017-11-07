@@ -87,3 +87,24 @@ Result:
 - Because the earth is not flat, the precision of the longitude part of the coordinates increases the further from the equator you get.
 - The precision of the latitude part does not increase so much, more strictly however, a meridian arc length per 1 second depends on latitude at point concerned.
 - The discrepancy of 1 second meridian arc length between equator and pole is about 0.3 metres because the earth is an oblate spheroid.
+
+## Shapefile Metadata
+
+### Shape Types
+
+Shape types are represented by numbers between 0 and 31 as defined by the shapefile specification and listed below. It is important to note that numbering system has several reserved numbers which have not been used yet therefore the numbers of the existing shape types are not sequential:
+
+- NULL = 0
+- POINT = 1
+- POLYLINE = 3
+- POLYGON = 5
+- MULTIPOINT = 8
+- POINTZ = 11
+- POLYLINEZ = 13
+- POLYGONZ = 15
+- MULTIPOINTZ = 18
+- POINTM = 21
+- POLYLINEM = 23
+- POLYGONM = 25
+- MULTIPOINTM = 28
+- MULTIPATCH = 31
