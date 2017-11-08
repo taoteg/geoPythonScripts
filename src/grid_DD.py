@@ -1,5 +1,5 @@
 """
-Python script to create a grid basedon bounding box extents in decimanl degrees.
+Python script to create a grid based on bounding box extents in decimal degrees or degrees minutes seconds.
 """
 
 
@@ -8,13 +8,15 @@ Python script to create a grid basedon bounding box extents in decimanl degrees.
 ########################
 
 import sys
+import os
+from pathlib import Path
 import argparse
 import math
 import re
 import shapefile as shp
 import pygeoj
 from pyproj import Proj, transform
-# import urllib.request
+import urllib.request
 
 
 ########################
@@ -51,6 +53,7 @@ if len(sys.argv) != 9:    # 9 to include sys.argv[0].
 # Module variables.
 ########################
 
+# Input Parameters
 scriptName = sys.argv[0]
 coordType = sys.argv[1]
 minLat = float(sys.argv[2])
@@ -73,6 +76,17 @@ for idx, val in enumerate(parameters):
     print('\n')
 """
 
+# Vars
+cwd = os.getcwd()
+# print(cwd)
+base_path = os.path.abspath('.')
+# print(base_path)
+base_path = Path(".").resolve()
+print(base_path)
+target_path = 'shapefiles/grid_DD/'
+print(target_path)
+output_path = os.path.join(str(base_path), str(target_path))
+print(output_path)
 
 ########################
 # Module Methods.
@@ -108,12 +122,34 @@ def parse_dms(dms):
 
 
 # function to generate .prj file information using spatialreference.org
-def getWKT_PRJ (epsg_code):
-     import urllib
+def getWKT_PRJ(epsg_code):
      # access projection information
-     wkt = urllib.urlopen("http://spatialreference.org/ref/epsg/{0}/prettywkt/".format(epsg_code))
+     # NOTE: urllib.urlopen is now urllib.request.urlopen.
+     wkt = urllib.request.urlopen("http://spatialreference.org/ref/epsg/{0}/prettywkt/".format(epsg_code))
+     """
+     ERROR:
+        Traceback (most recent call last):
+          File "src/grid_DD.py", line 192, in <module>
+            epsg = getWKT_PRJ("4326")
+          File "src/grid_DD.py", line 144, in getWKT_PRJ
+            remove_spaces = wkt.read().replace(" ","")
+        TypeError: a bytes-like object is required, not 'str'
+     """
+     # wkt = urllib.request.urlopen("http://spatialreference.org/ref/epsg/{0}/prettywkt/".format(epsg_code)).text
+     """
+     ERROR:
+        Traceback (most recent call last):
+          File "src/grid_DD.py", line 179, in <module>
+            epsg = getWKT_PRJ("4326")
+          File "src/grid_DD.py", line 129, in getWKT_PRJ
+            wkt = urllib.request.urlopen("http://spatialreference.org/ref/epsg/{0}/prettywkt/".format(epsg_code)).text
+        AttributeError: 'HTTPResponse' object has no attribute 'text'
+     """
+     wkt_str = b'wkt'.decode("utf-8")
+     print(wkt_str)
      # remove spaces between charachters
-     remove_spaces = wkt.read().replace(" ","")
+     # remove_spaces = wkt.read().replace(" ","")
+     remove_spaces = wkt_str.read().replace(" ","")
      # place all the text on one line
      output = remove_spaces.replace("\n", "")
      return output
@@ -156,7 +192,10 @@ Generate a projection file.
 """
 
 # create the .prj file
-prj = open("filename.prj", "w")
+prj_filename = fileBaseName + '.prj'
+prj_file = output_path + prj_filename
+# print(prj_filename)
+prj = open(prj_file, "w")
 # call the function and supply the epsg code
 epsg = getWKT_PRJ("4326")
 prj.write(epsg)
@@ -228,7 +267,7 @@ print(num_records)
 # w.point(122, 45)
 
 # Write the shapefile.
-w.save('shapefiles/test/point_10')
+w.save('shapefiles/grid_DD/point_10')
 
 
 
